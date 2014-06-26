@@ -10,7 +10,7 @@
     <![endif]-->
 
 	<script src="d3.js" charset="utf-8"></script>
-	
+
     <!--[if lt IE 9]>
 	<script src="aight.d3.js" charset="utf-8"></script>
     <![endif]-->
@@ -20,11 +20,53 @@
 	<p>数据可视化</p>
 	<p>游戏</p>
 	<p>搜索</p>
-	<div>算法</div>
+	<div id="alg">算法</div>
+
+	<p>颜色</p>
+
+	<ul id="enter-exit">三段式，Update Enter Exit
+		<li></li>
+	</ul>
 </body>
-	
+
 <script type="text/javascript">
-	d3.selectAll('p').style('color', 'red');
-	d3.select('div').style('color', 'green').style('font-size', '2em');
+
+	d3.selectAll('p,div').data([{size:1.1},{size:2.1}])
+		.style('font-size', function(d,i){
+			console.log('D:'+d);
+			return d.size+'em';
+		})
+		.style('color', function(d,i){
+			console.log('other d: ' + d);
+			return 'rgb('+100*d.size+', '+d.size*90+', 50)';
+		});
+
+	// d3.selectAll('p').style('color', function(d,i){
+	// 	console.log('i: ' + i);
+	// 	console.log('d: ' + d);
+	// 	return 'rgb('+Math.floor(255*Math.random())+', '+i*18+', 50)'; // IE8
+	// 	//return 'hsl('+360*Math.random()+', 100%, 50%)'; // IE9+	
+	// });
+	
+	// Data binding
+	var ul = d3.select('ul');
+	var selection = ul.selectAll('li').data([1,2,3,4,5,6]);
+	// Updating
+	selection.text(function(d){
+		return 'Update：' + d;
+	});
+	// Enter
+	selection.enter().append('li').text(function(d){
+		return 'Enter：' + d;
+	}).transition().duration(3000).style('font-size', '30px');
+	// Exit
+	selection.exit().remove();
+
+	// Transition
+	d3.select("body")
+	.style('background-color', 'white')
+	.transition().duration(5000)
+    .style("background-color", "#FFFFCC");
+
 </script>
 </html>
