@@ -22,13 +22,17 @@
 			, root = data
 			, nodeLabelReader = defaultNodeLabelReader
 			, interval = 15
-			, layerHeight = 70;
+			, layerHeight = 100;
 		;
 
 		// main function
 		function ochart(container){
 			// compute layout
 			var tree = layout(data);
+			// create nodes data
+			tree.nodes = createNodes(tree);
+			// create links data
+			tree.links = createLinks(tree);
 			// draw nodes and links
 			draw(container, tree);
 		}
@@ -68,6 +72,69 @@
 			if (!arguments.length) return nodeLabelReader;
 			nodeLabelReader = x;
 			return ochart;
+		}
+
+		function createNodes(tree){
+			var nodes = [];
+			traverseTreeLastOrder(tree, nodes, function(node){
+				var nodes = this;
+				nodes.push(node);
+			});
+			return nodes;
+		}
+
+		function createLinks(tree){
+			var links = [];
+			traverseTreeLastOrder(tree, links, function(node){
+				var links = this;
+				// 到父节点的线
+				if (node.parentNode){
+					var p1 = topCenter(node.nodeRect);
+					var parentNodeRect = node.parentNode.nodeRect
+					var parentBottom = parentNodeRect[Y]+parentNodeRect[HEIGHT];
+					var p2 = {x:p1.x, y:p1.y-(p1.y - parentBottom)/2};
+					links.push({'p1':p1, 'p2':p2});
+				}
+				// 到孩子节点的线
+				if (!isEmpty(node.children)){
+					var p1 = bottomCenter(node.nodeRect);
+					var childTop = node.children[0].nodeRect[Y];
+					var p2 = {x:p1.x, y:p1.y+(childTop-p1.y)/2};
+					links.push({'p1':p1, 'p2':p2});
+					// 孩子节点的水平线
+					var children = node.children;
+					if (children.length>1){
+						var firstChild = children[0];
+						var lastChild = children[children.length-1];
+						var p1 = middleTopCenter(firstChild);
+						var p2 = middleTopCenter(lastChild);
+						links.push({'p1':p1, 'p2':p2});
+					}
+				}
+			});
+			return links;
+		}
+
+		function middleTopCenter(node){
+			var p1 = topCenter(node.nodeRect);
+			var parentNodeRect = node.parentNode.nodeRect
+			var parentBottom = parentNodeRect[Y]+parentNodeRect[HEIGHT];
+			p1.y = p1.y-(p1.y - parentBottom)/2;
+			return p1;
+		}
+
+		function bottomCenter(nodeRect){
+			var p = {};
+			p.y = nodeRect[Y]+nodeRect[HEIGHT];
+			p.x = nodeRect[X]+nodeRect[WIDTH]/2;
+			return p;
+		}
+
+		function topCenter(nodeRect){
+			var p = {};
+			p.y = nodeRect[Y];
+			p.x = nodeRect[X]+nodeRect[WIDTH]/2;
+			return p;
 		}
 
 		// default implementations
@@ -125,7 +192,14 @@
 			for(var i=0; i<children.length; i++){
 				lastOrderAdjustNodePos(children[i]);
 			}
-			// 调整root
+			// 调整root, 居中
+			var center, lastNode = children[children.length-1];
+			var childLength = lastNode.nodeRect[X]+lastNode.nodeRect[WIDTH] - children[0].nodeRect[X];
+			center = children[0].nodeRect[X] + childLength/2;
+			wrappedNode.nodeRect[X] = center - wrappedNode.nodeRect[WIDTH]/2;
+			// log('调整root "'+wrappedNode.node.name+'" to center: ' + wrappedNode.nodeRect[X]);
+			log('调整：'+wrappedNode.node.name);
+			// 根据右兄弟调整位置
 			var nextSibling = findNextSibling(wrappedNode);
 			if (nextSibling){
 				log('nextSibling: ' + nextSibling.node.name);
@@ -371,15 +445,33 @@
 	            var y = d3.event.translate[1];
 	            d3.select('.canvas').attr('transform', 'translate('+x+','+y+')');
 	        }
+			drawNodes(svg, tree);
+			drawLinks(svg, tree);
+		}
 
-			var nodes = [];
+		function drawLinks(svg, tree){
+			log(tree.links);
+			var data = svg.selectAll('g.links').data(tree.links);
+			data.enter()
+			.append('g').attr('class', 'links')
+			.append('line')
+			.attr('x1', function(link){
+				return link.p1.x;
+			})
+			.attr('y1', function(link){
+				return link.p1.y;
+			})
+			.attr('x2', function(link){
+				return link.p2.x;
+			})
+			.attr('y2', function(link){
+				return link.p2.y;
+			})
+		}
 
-			traverseTreeLastOrder(tree, nodes, function(node){
-				var nodes = this;
-				nodes.push(node);
-			});
+		function drawNodes(svg, tree){
 
-			var data = svg.selectAll('g').data(nodes);
+			var data = svg.selectAll('g').data(tree.nodes);
 
 			// enter
 			var g = data.enter()
