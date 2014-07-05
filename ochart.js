@@ -54,33 +54,34 @@
 		// default implementations
 		function defaultLayout(data){
 			log('defaultLayout called.');
-			// DFS traverse to compute block layout
 			// wrap tree
-			var tree = traverseTreeBFS(data, function(node){
-				//log('visit: ' + node.name);
-				var parent = this;
-				//log(parent);
-				if (parent.parentOfRoot){
-					return {
-						node: node,
-						nodeCoord: computeNodeCoord(node, false),
-						depth: 0,
-						children: [],
-					};
-				}else{
-					var wrapNode = {
-						node: node,
-						nodeCoord: computeNodeCoord(node, parent),
-						depth: parent.depth+1,
-						children: []
-					};
-					parent.children.push(wrapNode);
-					return wrapNode;
-				}
-			});
+			var tree = traverseTreeBFS(data, traverseCallback);
 			log(tree);
 		}
 
+		function traverseCallback(node){
+			//log('visit: ' + node.name);
+			var parent = this;
+			//log(parent);
+			if (parent.parentOfRoot){
+				return {
+					node: node,
+					nodeCoord: computeNodeCoord(node, false),
+					depth: 0,
+					children: [],
+				};
+			}else{
+				var wrapNode = {
+					node: node,
+					nodeCoord: computeNodeCoord(node, parent),
+					depth: parent.depth+1,
+					children: []
+				};
+				parent.children.push(wrapNode);
+				return wrapNode;
+			}
+		}
+		
 		// node: raw data node
 		// parent: wrap node parent
 		function computeNodeCoord(node, parent){
