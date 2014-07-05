@@ -21,6 +21,8 @@
 			, draw = defaultDraw
 			, root = data
 			, nodeLabelReader = defaultNodeLabelReader
+			, interval = 15
+			, layerHeight = 70;
 		;
 
 		// main function
@@ -73,9 +75,123 @@
 			log('defaultLayout called.');
 			// wrap tree
 			var tree = traverseTreeFirstOrder(data, firstOrderCallback);
-			var context = {};
-			traverseTreeLastOrder(tree, context, lastOrderCallback);
+			computeNodeRect(tree);
 			return tree;
+		}
+
+		function computeNodeRect(wrappedNode){
+			firstOrderComputeNodeRect(wrappedNode);
+			lastOrderAdjustNodePos(wrappedNode);
+		}
+
+		function firstOrderComputeNodeRect(wrappedNode){
+			// 先计算 root 位置
+			computeRoot(wrappedNode);
+
+			var children = wrappedNode.children;
+			// 计算孩子们的位置
+			// for(var i=0; i<children.length; i++){
+			// 	computeRoot(children[i]);
+			// }
+			// 然后递归计算孩子们的位置
+			for(var i=0; i<children.length; i++){
+				firstOrderComputeNodeRect(children[i]);
+			}
+		}
+
+		function computeRoot(wrappedNode){
+			//	x:看是否有左兄弟？有则顺序排列，无则取父节点的位置，无父节点则取0.
+			//	y:按照 depth 计算
+			
+			// 计算节点尺寸
+			nodeRectBuilder.call(ochart, wrappedNode);
+
+			var nodeRect = wrappedNode.nodeRect;
+			nodeRect[Y] = wrappedNode.depth * layerHeight;
+			var preSibling = findPreSibling(wrappedNode);
+			if (preSibling){
+				nodeRect[X] = preSibling.nodeRect[X] + preSibling.nodeRect[WIDTH] + interval;
+			}else{
+				nodeRect[X] = wrappedNode.parentNode ? 
+					wrappedNode.parentNode.nodeRect[X] : 0;
+			}
+		}
+
+		function lastOrderAdjustNodePos(wrappedNode){
+			var children = wrappedNode.children;
+			if (isEmpty(children)){
+				return;
+			}
+			for(var i=0; i<children.length; i++){
+				lastOrderAdjustNodePos(children[i]);
+			}
+			// 调整root
+			var nextSibling = findNextSibling(wrappedNode);
+			if (nextSibling){
+				log('nextSibling: ' + nextSibling.node.name);
+				var rightMostOfTree = findRightMost(wrappedNode);
+				var offset = nextSibling.nodeRect[X] - rightMostOfTree - interval;
+				if (offset < 0){
+					var siblings = findAllPreSiblings(wrappedNode);
+					for(var i=0; i<siblings.length; i++){
+						moveTree(siblings[i], offset);	
+					}
+				}
+			}
+		}
+
+		function findAllPreSiblings(wrappedNode){
+			var parentNode = wrappedNode.parentNode,
+			children = parentNode.children,
+			siblings = [];
+			if (!parentNode){
+				return [];
+			}
+			var index = children.indexOf(wrappedNode);
+			for(var i=0; i<=index; i++){
+				siblings.push(children[i]);
+			}
+			return siblings;
+		}
+
+		function moveTree(tree, offset){
+			traverseTreeLastOrder(tree, {}, function(node){
+				node.nodeRect[X] += offset;
+			});
+		}
+
+		function findRightMost(wrappedNode){
+			var rightMost = {x:0};
+			traverseTreeLastOrder(wrappedNode, rightMost, function(node){
+				var right = node.nodeRect[X]+node.nodeRect[WIDTH];
+				if (right > this.x){
+					this.x = right;
+				}
+			});
+			return rightMost.x;
+		}
+
+		function adjustRootByChild(wrappedNode){
+			if (isEmpty(wrappedNode.children)){
+				return;
+			}
+			// 计算offset：next sibling 的左 - last child 的右边线位置
+			var nextSibling = findNextSibling(wrappedNode),
+			offset = 0, children = wrappedNode.children,
+			lastNodeRect = children[children.length-1].nodeRect;
+
+			if (!nextSibling){
+				return;
+			}
+			offset = nextSibling.nodeRect[X] - (lastNodeRect[X] + lastNodeRect[WIDTH]);
+			if (offset > 0){
+				// update children
+				for(var i=0; i<children.length; i++){
+					children[i].nodeRect[X] -= offset;
+				}
+				// update root
+				wrappedNode.nodeRect[X] -= offset;
+			}
 		}
 
 		function lastOrderCallback(wrappedNode){
@@ -156,9 +272,27 @@
 		}
 
 		// return false if not find or return object.
+		function findNextSibling(wrappedNode){
+			var parentNode = wrappedNode.parentNode,
+			children = parentNode.children;
+			if (!parentNode){
+				return false;
+			}
+			var index = children.indexOf(wrappedNode);
+			if (index > 0 && index <= children.length-2){
+				return children[index+1];
+			}else{
+				return false;
+			}
+		}
+
+		// return false if not find or return object.
 		function findPreSibling(wrappedNode){
 			var parentNode = wrappedNode.parentNode,
 			children = parentNode.children;
+			if (!parentNode){
+				return false;
+			}
 			var index = children.indexOf(wrappedNode);
 			if (index > 0){
 				return children[index-1];
@@ -206,16 +340,6 @@
 				parent.children.push(wrapNode);
 				return wrapNode;
 			}
-		}
-
-		// node: raw data node
-		// parent: wrap node parent
-		function computeNodeBlock(node, parent){
-			var x, y, width, height, fontWidth=16, fontHeight=18;
-			var label = nodeLabelReader(node);
-			width = label.length*fontWidth;
-			height = label.length*fontHeight;
-			return [x,y,width,height];
 		}
 
 		function defaultDraw(container, tree){
@@ -277,7 +401,9 @@
 			})
 			.attr('height', function(node){
 				return node.nodeRect[HEIGHT];
-			});
+			})
+			.attr('rx', 5)
+			.attr('ry', 5);
 
 			g.append('text').text(function(node){
 				return nodeLabelReader(node.node);
