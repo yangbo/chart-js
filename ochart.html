@@ -24,6 +24,7 @@
         }
         #container{
             width: 800px;
+            height: 500px;
             border: 1px solid gray;
             margin: 20px auto;
             overflow: hidden;
@@ -46,7 +47,14 @@
         }
 
         .node {
-          font: 14px 雅黑;
+            font: 14px 雅黑;
+            fill: none;
+            stroke: steelblue;
+            stroke-width: 2px;
+        }
+        .node text {
+            stroke: steelblue;
+            color: black;
         }
 
         .link {
@@ -67,8 +75,7 @@
 
     <script type="text/javascript">
         var ochart = d3.ochart(dept);
-        console.log('rootLength:' + ochart.rootLength());
-        d3.select('svg').call(ochart);
+        d3.select('#container').call(ochart);
     </script>
 </body>
 </html>
