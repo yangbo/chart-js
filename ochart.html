@@ -44,7 +44,8 @@
             /*fill: none;
             stroke: steelblue;
             stroke-width: 2px;*/
-            fill:RGB(30,52,86);
+            /*fill:RGB(30,52,86);*/
+            fill:RGB(33,62,121);
             stroke:RGB(0,0,0);
             stroke-width:1;
             filter:url(#Gaussian_Blur);
@@ -90,7 +91,7 @@
     </div>
 
     <script type="text/javascript">
-        var ochart = d3.ochart(dept);
+        var ochart = d3.ochart(dept).orient('vertical');
         d3.select('#container').call(ochart);
     </script>
 </body>
