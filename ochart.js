@@ -214,6 +214,7 @@
 			}
 		}
 
+		// 如果是第一个孩子，还要看父节点的左孩子，直到根
 		function findAllPreSiblings(wrappedNode){
 			var parentNode = wrappedNode.parentNode,
 			children = parentNode.children,
@@ -224,6 +225,27 @@
 			var index = children.indexOf(wrappedNode);
 			for(var i=0; i<=index; i++){
 				siblings.push(children[i]);
+			}
+			// 第一个孩子，找祖先节点的左孩子
+			if (index == 0){
+				var node = wrappedNode, 
+					parent = node.parentNode, 
+					children = parent.children;
+				while(true){
+					index = children.indexOf(node);
+					if (index > 0){
+						for(var i=0; i<index; i++){
+							siblings.push(children[i]);
+						}
+						break;
+					}
+					if (node.parentOfRoot){
+						break;
+					}
+					node = parent;
+					parent = node.parentNode;
+					children = parent.children;
+				}
 			}
 			return siblings;
 		}
@@ -353,7 +375,7 @@
 				return false;
 			}
 			var index = children.indexOf(wrappedNode);
-			if (index > 0 && index <= children.length-2){
+			if (index >= 0 && index <= children.length-2){
 				return children[index+1];
 			}else{
 				return false;
