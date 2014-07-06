@@ -8,21 +8,23 @@
 	// constants
 	var X=0,Y=1,WIDTH=2,HEIGHT=3;
 	var TOP=0,RIGHT=1,DOWN=2,LEFT=3;
+	var FS_WIDTH=0, FS_HEIGHT=1;
 
 	// factory method
 	d3.ochart = function(data){
 		// config
-		var orient = 'vertical'			// vertical, horizontal
+		var orient = 'horizontal'			// vertical, horizontal
 			, rootLength = 1			// The line length of root node
 			, nodeMargin = [30, 20]		// [top-down, right-left]
-			, nodePadding = [20, 30]	// [top-donw, right-left]
+			, nodePadding = [10, 15]	// [top-donw, right-left]
 			, nodeRectBuilder = defaultNodeRectBuilder
 			, layout = defaultLayout
 			, draw = defaultDraw
 			, root = data
 			, nodeLabelReader = defaultNodeLabelReader
 			, interval = 15				// space between sibling nodes.
-			, layerHeight = 100;		// height of layer, from top to top.
+			, layerHeight = 100 		// height of layer, from top to top.
+			, fontSize = [16, 18];		// width, height. 高度比宽度大2像素
 		;
 
 		// main function
@@ -73,6 +75,11 @@
 			nodeLabelReader = x;
 			return ochart;
 		}
+		ochart.fontSize = function(x){
+			if (!arguments.length) return fontSize;
+			fontSize = x;
+			return ochart;
+		}
 
 		function createNodes(tree){
 			var nodes = [];
@@ -85,34 +92,65 @@
 
 		function createLinks(tree){
 			var links = [];
-			traverseTreeLastOrder(tree, links, function(node){
-				var links = this;
-				// 到父节点的线
-				if (node.parentNode){
-					var p1 = topCenter(node.nodeRect);
-					var parentNodeRect = node.parentNode.nodeRect
-					var parentBottom = parentNodeRect[Y]+parentNodeRect[HEIGHT];
-					var p2 = {x:p1.x, y:p1.y-(p1.y - parentBottom)*1/3};
-					links.push({'p1':p1, 'p2':p2});
-				}
-				// 到孩子节点的线
-				if (!isEmpty(node.children)){
-					var p1 = bottomCenter(node.nodeRect);
-					var childTop = node.children[0].nodeRect[Y];
-					var p2 = {x:p1.x, y:p1.y+(childTop-p1.y)*2/3};
-					links.push({'p1':p1, 'p2':p2});
-					// 孩子节点的水平线
-					var children = node.children;
-					if (children.length>1){
-						var firstChild = children[0];
-						var lastChild = children[children.length-1];
-						var p1 = middleTopCenter(firstChild);
-						var p2 = middleTopCenter(lastChild);
-						links.push({'p1':p1, 'p2':p2});
-					}
-				}
-			});
+			traverseTreeLastOrder(tree, links, 
+				orient=='vertical'? vertialLinksCallback : linksCallback);
 			return links;
+		}
+
+		function vertialLinksCallback(node){
+			var links = this;
+			// 到父节点的线
+			if (node.parentNode){
+				var p1 = leftCenter(node.nodeRect);
+				var parentNodeRect = node.parentNode.nodeRect
+				var parentRight = parentNodeRect[X]+parentNodeRect[WIDTH];
+				var p2 = {x:p1.x-(p1.x - parentRight)*1/3, y:p1.y};
+				links.push({'p1':p1, 'p2':p2});
+			}
+			// 到孩子节点的线
+			if (!isEmpty(node.children)){
+				var p1 = rightCenter(node.nodeRect);
+				var childRight = node.children[0].nodeRect[X];
+				var p2 = {x:p1.x+(childRight-p1.x)*2/3, y:p1.y};
+				links.push({'p1':p1, 'p2':p2});
+				// 孩子节点的水平线
+				var children = node.children;
+				if (children.length>1){
+					var firstChild = children[0];
+					var lastChild = children[children.length-1];
+					var p1 = middleLeftCenter(firstChild);
+					var p2 = middleLeftCenter(lastChild);
+					links.push({'p1':p1, 'p2':p2});
+				}
+			}
+		}
+
+		function linksCallback(node){
+			var links = this;
+			// 到父节点的线
+			if (node.parentNode){
+				var p1 = topCenter(node.nodeRect);
+				var parentNodeRect = node.parentNode.nodeRect
+				var parentBottom = parentNodeRect[Y]+parentNodeRect[HEIGHT];
+				var p2 = {x:p1.x, y:p1.y-(p1.y - parentBottom)*1/3};
+				links.push({'p1':p1, 'p2':p2});
+			}
+			// 到孩子节点的线
+			if (!isEmpty(node.children)){
+				var p1 = bottomCenter(node.nodeRect);
+				var childTop = node.children[0].nodeRect[Y];
+				var p2 = {x:p1.x, y:p1.y+(childTop-p1.y)*2/3};
+				links.push({'p1':p1, 'p2':p2});
+				// 孩子节点的水平线
+				var children = node.children;
+				if (children.length>1){
+					var firstChild = children[0];
+					var lastChild = children[children.length-1];
+					var p1 = middleTopCenter(firstChild);
+					var p2 = middleTopCenter(lastChild);
+					links.push({'p1':p1, 'p2':p2});
+				}
+			}
 		}
 
 		function middleTopCenter(node){
@@ -123,6 +161,14 @@
 			return p1;
 		}
 
+		function middleLeftCenter(node){
+			var p1 = leftCenter(node.nodeRect);
+			var parentNodeRect = node.parentNode.nodeRect
+			var parentRight = parentNodeRect[X]+parentNodeRect[WIDTH];
+			p1.x = p1.x-(p1.x - parentRight)/3;
+			return p1;
+		}
+
 		function bottomCenter(nodeRect){
 			var p = {};
 			p.y = nodeRect[Y]+nodeRect[HEIGHT];
@@ -130,6 +176,18 @@
 			return p;
 		}
 
+		function leftCenter(nodeRect){
+			var p = {};
+			p.x = nodeRect[X];
+			p.y = nodeRect[Y]+nodeRect[HEIGHT]/2;
+			return p;
+		}
+		function rightCenter(nodeRect){
+			var p = {};
+			p.x = nodeRect[X]+nodeRect[WIDTH];
+			p.y = nodeRect[Y]+nodeRect[HEIGHT]/2;
+			return p;
+		}
 		function topCenter(nodeRect){
 			var p = {};
 			p.y = nodeRect[Y];
@@ -152,14 +210,13 @@
 		}
 
 		function firstOrderComputeNodeRect(wrappedNode){
+			var children = wrappedNode.children;
 			// 先计算 root 位置
 			computeRoot(wrappedNode);
-
-			var children = wrappedNode.children;
-			// 计算孩子们的位置
-			// for(var i=0; i<children.length; i++){
-			// 	computeRoot(children[i]);
-			// }
+			// 计算一遍孩子节点
+			for(var i=0; i<children.length; i++){
+				computeRoot(children[i]);
+			}
 			// 然后递归计算孩子们的位置
 			for(var i=0; i<children.length; i++){
 				firstOrderComputeNodeRect(children[i]);
@@ -167,21 +224,57 @@
 		}
 
 		function computeRoot(wrappedNode){
-			//	x:看是否有左兄弟？有则顺序排列，无则取父节点的位置，无父节点则取0.
-			//	y:按照 depth 计算
-			
 			// 计算节点尺寸
 			nodeRectBuilder.call(ochart, wrappedNode);
-
 			var nodeRect = wrappedNode.nodeRect;
-			nodeRect[Y] = wrappedNode.depth * layerHeight;
-			var preSibling = findPreSibling(wrappedNode);
-			if (preSibling){
-				nodeRect[X] = preSibling.nodeRect[X] + preSibling.nodeRect[WIDTH] + interval;
-			}else{
-				nodeRect[X] = wrappedNode.parentNode ? 
-					wrappedNode.parentNode.nodeRect[X] : 0;
+
+			if (orient == 'vertical'){
+				//nodeRect[X] = wrappedNode.depth * layerHeight;
+				if (wrappedNode.parentNode){
+					var maxParentRight = findMaxParentRight(wrappedNode);
+					nodeRect[X] = maxParentRight + layerHeight;
+				}else{
+					nodeRect[X] = 0;
+				}
+				var preSibling = findPreSibling(wrappedNode);
+				if (preSibling){
+					nodeRect[Y] = preSibling.nodeRect[Y] + preSibling.nodeRect[HEIGHT] + interval;
+				}else{
+					nodeRect[Y] = wrappedNode.parentNode ? 
+						wrappedNode.parentNode.nodeRect[Y] : 0;
+				}
+			}else{	// horizontal
+				//	x:看是否有左兄弟？有则顺序排列，无则取父节点的位置，无父节点则取0.
+				//	y:按照 depth 计算
+				nodeRect[Y] = wrappedNode.depth * layerHeight;
+				var preSibling = findPreSibling(wrappedNode);
+				if (preSibling){
+					nodeRect[X] = preSibling.nodeRect[X] + preSibling.nodeRect[WIDTH] + interval;
+				}else{
+					nodeRect[X] = wrappedNode.parentNode ? 
+						wrappedNode.parentNode.nodeRect[X] : 0;
+				}
 			}
+		}
+
+		function findMaxParentRight(wrappedNode){
+			var parent = wrappedNode.parentNode;
+			if (!parent){
+				return 0;
+			}
+			var grandParent = parent.parentNode;
+			if (!grandParent){
+				return parent.nodeRect[X] + parent.nodeRect[WIDTH];
+			}
+			var children = grandParent.children, maxRight = 0;
+			for (var i=0; i<children.length; i++){
+				var node = children[i], 
+				right = node.nodeRect[X] + node.nodeRect[WIDTH];
+				if (right > maxRight){
+					maxRight = right;
+				}
+			}
+			return maxRight;
 		}
 
 		function lastOrderAdjustNodePos(wrappedNode){
@@ -193,24 +286,51 @@
 				lastOrderAdjustNodePos(children[i]);
 			}
 			// 调整root, 居中
-			var center, lastNode = children[children.length-1];
-			var childLength = lastNode.nodeRect[X]+lastNode.nodeRect[WIDTH] - children[0].nodeRect[X];
-			center = children[0].nodeRect[X] + childLength/2;
-			wrappedNode.nodeRect[X] = center - wrappedNode.nodeRect[WIDTH]/2;
-			// log('调整root "'+wrappedNode.node.name+'" to center: ' + wrappedNode.nodeRect[X]);
-			log('调整：'+wrappedNode.node.name);
+			makeParentCenter(wrappedNode);
+			log('调整：' + wrappedNode.node.name);
 			// 根据右兄弟调整位置
 			var nextSibling = findNextSibling(wrappedNode);
 			if (nextSibling){
 				log('nextSibling: ' + nextSibling.node.name);
+				adjustNextSiblings(wrappedNode, nextSibling);
+			}
+		}
+
+		function adjustNextSiblings(wrappedNode, nextSibling){
+			if (orient == 'vertical'){
+				var bottomOfTree = findBottom(wrappedNode);
+				var offset = nextSibling.nodeRect[Y] - bottomOfTree - interval;
+				if (offset < 0){
+					var siblings = findAllPreSiblings(wrappedNode);
+					for(var i=0; i<siblings.length; i++){
+						moveTree(siblings[i], [0, offset]);	
+					}
+				}
+			}else{	// horizontal
 				var rightMostOfTree = findRightMost(wrappedNode);
 				var offset = nextSibling.nodeRect[X] - rightMostOfTree - interval;
 				if (offset < 0){
 					var siblings = findAllPreSiblings(wrappedNode);
 					for(var i=0; i<siblings.length; i++){
-						moveTree(siblings[i], offset);	
+						moveTree(siblings[i], [offset, 0]);	
 					}
 				}
+			}
+		}
+
+		function makeParentCenter(wrappedNode){
+			var children = wrappedNode.children;
+			var center, lastNode = children[children.length-1];
+			if (orient == 'vertical'){
+				var childHeight = lastNode.nodeRect[Y]+lastNode.nodeRect[HEIGHT] - children[0].nodeRect[Y];
+				log('childHeight: ' + childHeight);
+				center = children[0].nodeRect[Y] + childHeight/2;
+				wrappedNode.nodeRect[Y] = center - wrappedNode.nodeRect[HEIGHT]/2;
+			}else{
+				// horizontal
+				var childLength = lastNode.nodeRect[X]+lastNode.nodeRect[WIDTH] - children[0].nodeRect[X];
+				center = children[0].nodeRect[X] + childLength/2;
+				wrappedNode.nodeRect[X] = center - wrappedNode.nodeRect[WIDTH]/2;
 			}
 		}
 
@@ -250,10 +370,23 @@
 			return siblings;
 		}
 
+		// offset: [x,y]
 		function moveTree(tree, offset){
 			traverseTreeLastOrder(tree, {}, function(node){
-				node.nodeRect[X] += offset;
+				node.nodeRect[X] += offset[0];
+				node.nodeRect[Y] += offset[1];
 			});
+		}
+
+		function findBottom(wrappedNode){
+			var bottomMost = {y:0};
+			traverseTreeLastOrder(wrappedNode, bottomMost, function(node){
+				var bottom = node.nodeRect[Y]+node.nodeRect[HEIGHT];
+				if (bottom > this.y){
+					this.y = bottom;
+				}
+			});
+			return bottomMost.y;
 		}
 
 		function findRightMost(wrappedNode){
@@ -416,14 +549,15 @@
 
 		function wrappingNode(node, depth, parentNode){
 			return {
-					parentNode: parentNode,
-					node: node,
-					nodeRect: [0,0,0,0],	// [x, y, width, height]
-					nodeBlock: [0,0,0,0],	// [x, y, width, height]
-					depth: depth,
-					children: [],
-					childBlock: [0,0,0,0],	// [x, y, width, height]
-					subTreeBlock: [0,0,0,0]
+				parentNode: parentNode,
+				node: node,
+				nodeRect: [0,0,0,0],	// [x, y, width, height]
+				nodeBlock: [0,0,0,0],	// [x, y, width, height]
+				depth: depth,
+				children: [],
+				childBlock: [0,0,0,0],	// [x, y, width, height]
+				subTreeBlock: [0,0,0,0],
+				orient: 'horizontal'	// 节点文字排列方式
 			};
 		}
 
@@ -522,9 +656,34 @@
 			g.append('text').text(function(node){
 				return nodeLabelReader(node.node);
 			})
-			.attr('dx', 15)
-			.attr('dy', 23)
+			.attr('dx', function(node){
+				var dx = 0, compensate = 0;
+				if (node.orient == 'vertical'){
+					compensate = fontSize[FS_WIDTH]/2;
+					dx = compensate + nodePadding[RIGHT];
+				}else{
+					var label = nodeLabelReader(node.node);
+					// 居中计算
+					var offset = (node.nodeRect[WIDTH] - label.length * fontSize[FS_WIDTH])/2;
+					dx = offset;
+				}
+				return dx;
+			})
+			.attr('dy', function(node){
+				var dy = 0, compensate = 0;
+				if (node.orient == 'vertical'){
+					var label = nodeLabelReader(node.node);
+					dy = nodePadding[TOP];
+				}else{
+					compensate = fontSize[FS_HEIGHT]*3/4;
+					dy = compensate + nodePadding[TOP];
+				}
+				return dy;
+			})
 			.style('text-anchor', 'start')
+			.attr('class', function(node){
+				return node.orient;
+			})
 			;
 		}
 
@@ -582,16 +741,31 @@
 	// help functions
 	// 'this' point to ochart function object
 	function defaultNodeRectBuilder(wrappedNode){
+		// set node orient
+		if (!wrappedNode.parentNode && this.orient() == 'vertical'){
+			wrappedNode.orient = 'vertical';
+		}
 		var node = wrappedNode.node;
-		var fontSize = [16, 16];	// width, height
 		var reader = this.nodeLabelReader();
 		var label = reader(wrappedNode.node);
 		var nodePadding = this.nodePadding();
-
-		var nodeRect = [0, 0, 
-			fontSize[0]*label.length + nodePadding[RIGHT], 
-			fontSize[1] + nodePadding[TOP]
-		];
+		var nodeRect = [];
+		var fontSize = this.fontSize();
+		var minLength = Math.max(5, label.length);	// 最少5个字
+		if (wrappedNode.orient == 'vertical'){
+			nodeRect = [0, 0, 
+				fontSize[FS_WIDTH] + 2*nodePadding[RIGHT],
+				fontSize[FS_HEIGHT]*minLength + 2*nodePadding[TOP]
+			];
+			log('nodeRect: ');
+			log(nodeRect);
+		}else{
+			nodeRect = [0, 0, 
+				fontSize[FS_WIDTH]*minLength + 2*nodePadding[RIGHT], 
+				fontSize[FS_HEIGHT] + 2*nodePadding[TOP]
+			];
+		}
+		
 		wrappedNode.nodeRect = nodeRect;
 		return nodeRect;
 	}
