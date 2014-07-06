@@ -21,8 +21,8 @@
 			, draw = defaultDraw
 			, root = data
 			, nodeLabelReader = defaultNodeLabelReader
-			, interval = 15
-			, layerHeight = 100;
+			, interval = 15				// space between sibling nodes.
+			, layerHeight = 100;		// height of layer, from top to top.
 		;
 
 		// main function
@@ -92,14 +92,14 @@
 					var p1 = topCenter(node.nodeRect);
 					var parentNodeRect = node.parentNode.nodeRect
 					var parentBottom = parentNodeRect[Y]+parentNodeRect[HEIGHT];
-					var p2 = {x:p1.x, y:p1.y-(p1.y - parentBottom)/2};
+					var p2 = {x:p1.x, y:p1.y-(p1.y - parentBottom)*1/3};
 					links.push({'p1':p1, 'p2':p2});
 				}
 				// 到孩子节点的线
 				if (!isEmpty(node.children)){
 					var p1 = bottomCenter(node.nodeRect);
 					var childTop = node.children[0].nodeRect[Y];
-					var p2 = {x:p1.x, y:p1.y+(childTop-p1.y)/2};
+					var p2 = {x:p1.x, y:p1.y+(childTop-p1.y)*2/3};
 					links.push({'p1':p1, 'p2':p2});
 					// 孩子节点的水平线
 					var children = node.children;
@@ -119,7 +119,7 @@
 			var p1 = topCenter(node.nodeRect);
 			var parentNodeRect = node.parentNode.nodeRect
 			var parentBottom = parentNodeRect[Y]+parentNodeRect[HEIGHT];
-			p1.y = p1.y-(p1.y - parentBottom)/2;
+			p1.y = p1.y-(p1.y - parentBottom)/3;
 			return p1;
 		}
 
@@ -500,7 +500,7 @@
 			g.append('text').text(function(node){
 				return nodeLabelReader(node.node);
 			})
-			.attr('dx', 16)
+			.attr('dx', 15)
 			.attr('dy', 23)
 			.style('text-anchor', 'start')
 			;
