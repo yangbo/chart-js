@@ -15,7 +15,7 @@
 		var orient = 'vertical'			// vertical, horizontal
 			, rootLength = 1			// The line length of root node
 			, nodeMargin = [30, 20]		// [top-down, right-left]
-			, nodePadding = [15, 20]	// [top-donw, right-left]
+			, nodePadding = [20, 30]	// [top-donw, right-left]
 			, nodeRectBuilder = defaultNodeRectBuilder
 			, layout = defaultLayout
 			, draw = defaultDraw
@@ -500,8 +500,8 @@
 			g.append('text').text(function(node){
 				return nodeLabelReader(node.node);
 			})
-			.attr('dx', 10)
-			.attr('dy', 20)
+			.attr('dx', 16)
+			.attr('dy', 23)
 			.style('text-anchor', 'start')
 			;
 		}
