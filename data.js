@@ -12,7 +12,7 @@ children: [{id: '1389683154977',name: '公共事业部',data: {},children: []}]}
 {id: '4028813a3ed55131013ed55610ec002f',name: '二次产品研发中心',data: {},
 children: [{id: '4028813a3ed55131013ed55613280038',name: '技术支持部',data: {},children: []},
 {id: '4028813a3ed55131013ed556132d0039',name: '研发部',data: {},
-children: [{name:'架构师小组', children:[]}]}]},
+children: [{name:'架构师小组', children:[]},{name:'架构师小组'}]}]},
 {id: '4028813a3ed55131013ed55610f80030',name: '一次产品研发中心',data: {},
 children: [
 {id: '4028813a3ed55131013ed5561331003a',name: '数字电子部',data: {},
