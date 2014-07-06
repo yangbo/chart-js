@@ -476,12 +476,12 @@
 			// enter
 			var g = data.enter()
 			.append('g')
+			.attr('class', 'node')
 			.attr('transform', function(node){
 				return 'translate('+ node.nodeRect[X] + ', ' + node.nodeRect[Y] +')';
 			});
 
 			g.append('rect')
-			.attr('class', 'node')
 			.attr('x', function(node){
 				return 0;//node.nodeRect[X];
 			})
