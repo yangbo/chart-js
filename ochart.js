@@ -229,7 +229,7 @@
 			var nodeRect = wrappedNode.nodeRect;
 
 			if (orient == 'vertical'){
-				//nodeRect[X] = wrappedNode.depth * layerHeight;
+				// 根据父一层节点尺寸动态计算左边位置
 				if (wrappedNode.parentNode){
 					var maxParentRight = findMaxParentRight(wrappedNode);
 					nodeRect[X] = maxParentRight + layerHeight;
@@ -244,9 +244,15 @@
 						wrappedNode.parentNode.nodeRect[Y] : 0;
 				}
 			}else{	// horizontal
+				// 根据父一层节点尺寸动态计算左边位置
+				// nodeRect[Y] = wrappedNode.depth * layerHeight;
+				if (wrappedNode.parentNode){
+					var maxParentBottom = findMaxParentBottom(wrappedNode);
+					nodeRect[Y] = maxParentBottom + layerHeight;
+				}else{
+					nodeRect[Y] = 0;
+				}
 				//	x:看是否有左兄弟？有则顺序排列，无则取父节点的位置，无父节点则取0.
-				//	y:按照 depth 计算
-				nodeRect[Y] = wrappedNode.depth * layerHeight;
 				var preSibling = findPreSibling(wrappedNode);
 				if (preSibling){
 					nodeRect[X] = preSibling.nodeRect[X] + preSibling.nodeRect[WIDTH] + interval;
@@ -257,24 +263,37 @@
 			}
 		}
 
+		function findMaxParentBottom(wrappedNode){
+			return findMaxParentValue(wrappedNode, function(nodeRect){
+				return nodeRect[Y] + nodeRect[HEIGHT];
+			});
+		}
+		
 		function findMaxParentRight(wrappedNode){
+			return findMaxParentValue(wrappedNode, function(nodeRect){
+				return nodeRect[X] + nodeRect[WIDTH];
+			});
+		}
+
+		function findMaxParentValue(wrappedNode, computeValueCallback){
 			var parent = wrappedNode.parentNode;
 			if (!parent){
 				return 0;
 			}
 			var grandParent = parent.parentNode;
 			if (!grandParent){
-				return parent.nodeRect[X] + parent.nodeRect[WIDTH];
+				// return parent.nodeRect[X] + parent.nodeRect[WIDTH];
+				return computeValueCallback(parent.nodeRect);
 			}
-			var children = grandParent.children, maxRight = 0;
+			var children = grandParent.children, maxValue = 0;
 			for (var i=0; i<children.length; i++){
 				var node = children[i], 
-				right = node.nodeRect[X] + node.nodeRect[WIDTH];
-				if (right > maxRight){
-					maxRight = right;
+				value = computeValueCallback(node.nodeRect);
+				if (value > maxValue){
+					maxValue = value;
 				}
 			}
-			return maxRight;
+			return maxValue;
 		}
 
 		function lastOrderAdjustNodePos(wrappedNode){
@@ -769,9 +788,21 @@
 	// 'this' point to ochart function object
 	function defaultNodeRectBuilder(wrappedNode){
 		// set node orient
-		if (!wrappedNode.parentNode && this.orient() == 'vertical'){
-			wrappedNode.orient = 'vertical';
-		}
+		var rootNodeOrientTable = [];
+		rootNodeOrientTable[true] = [];
+		rootNodeOrientTable[false] = [];
+		// [isRoot][tree orient]
+		rootNodeOrientTable[true]['vertical'] = 'vertical';
+		rootNodeOrientTable[false]['vertical'] = 'horizontal';
+		
+		rootNodeOrientTable[true]['horizontal'] = 'horizontal';
+		rootNodeOrientTable[false]['horizontal'] = 'vertical';
+		
+		var isRoot = (!wrappedNode.parentNode),
+		 	treeOrient = this.orient();
+
+		wrappedNode.orient = rootNodeOrientTable[isRoot][treeOrient];
+
 		var node = wrappedNode.node;
 		var reader = this.nodeLabelReader();
 		var label = reader(wrappedNode.node);
