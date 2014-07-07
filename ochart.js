@@ -13,7 +13,7 @@
 	// factory method
 	d3.ochart = function(data){
 		// config
-		var orient = 'horizontal'			// vertical, horizontal
+		var orient = 'horizontal'		// vertical, horizontal
 			, rootLength = 1			// The line length of root node
 			, nodeMargin = [30, 20]		// [top-down, right-left]
 			, nodePadding = [10, 15]	// [top-donw, right-left]
@@ -636,7 +636,7 @@
 			.attr('transform', function(node){
 				return 'translate('+ node.nodeRect[X] + ', ' + node.nodeRect[Y] +')';
 			});
-
+			// 画框
 			g.append('rect')
 			.attr('x', function(node){
 				return 0;//node.nodeRect[X];
@@ -653,39 +653,63 @@
 			.attr('rx', 5)
 			.attr('ry', 5);
 
-			g.append('text').text(function(node){
-				return nodeLabelReader(node.node);
-			})
-			.attr('dx', function(node){
-				var dx = 0, compensate = 0;
+			// 画文字
+			g.each(function(node,index){
+				var selection = d3.select(this);
 				if (node.orient == 'vertical'){
-					compensate = fontSize[FS_WIDTH]/2;
-					dx = compensate + nodePadding[RIGHT];
+					// 竖排文字
+					selection
+					.append('text')
+					.attr("text-anchor", "middle")
+					.selectAll("tspan")
+					.data(nodeLabelReader(node.node).split(""))
+					.enter().append("tspan")
+						.attr("x", function(node){
+							var dx = 0, compensate = 0;
+							compensate = fontSize[FS_WIDTH]/2;
+							dx = compensate + nodePadding[RIGHT];
+							return dx;
+						})
+						.attr("dy", "1.2em")
+						.text(function(d){return d;});
 				}else{
-					var label = nodeLabelReader(node.node);
-					// 居中计算
-					var offset = (node.nodeRect[WIDTH] - label.length * fontSize[FS_WIDTH])/2;
-					dx = offset;
+					// 普通横排文字
+					selection
+					.append('text').text(function(node){
+						return nodeLabelReader(node.node);
+					})
+					.attr('dx', function(node){
+						var dx = 0, compensate = 0;
+						if (node.orient == 'vertical'){
+							compensate = fontSize[FS_WIDTH]/2;
+							dx = compensate + nodePadding[RIGHT];
+						}else{
+							var label = nodeLabelReader(node.node);
+							// 居中计算
+							var offset = (node.nodeRect[WIDTH] - label.length * fontSize[FS_WIDTH])/2;
+							dx = offset;
+						}
+						return dx;
+					})
+					.attr('dy', function(node){
+						var dy = 0, compensate = 0;
+						if (node.orient == 'vertical'){
+							var label = nodeLabelReader(node.node);
+							// 居中
+							var offset = (node.nodeRect[HEIGHT] - label.length * (fontSize[FS_HEIGHT]-2))/2;
+							//dy = nodePadding[TOP];
+							dy = offset;
+						}else{
+							compensate = fontSize[FS_HEIGHT]*3/4;
+							dy = compensate + nodePadding[TOP];
+						}
+						return dy;
+					})
+					.style('text-anchor', 'start')
+					.attr('class', function(node){
+						return node.orient;
+					});
 				}
-				return dx;
-			})
-			.attr('dy', function(node){
-				var dy = 0, compensate = 0;
-				if (node.orient == 'vertical'){
-					var label = nodeLabelReader(node.node);
-					// 居中
-					var offset = (node.nodeRect[HEIGHT] - label.length * (fontSize[FS_HEIGHT]-2))/2;
-					//dy = nodePadding[TOP];
-					dy = offset;
-				}else{
-					compensate = fontSize[FS_HEIGHT]*3/4;
-					dy = compensate + nodePadding[TOP];
-				}
-				return dy;
-			})
-			.style('text-anchor', 'start')
-			.attr('class', function(node){
-				return node.orient;
 			})
 			;
 		}
