@@ -654,7 +654,12 @@
 			.attr('class', 'node')
 			.attr('transform', function(node){
 				return 'translate('+ node.nodeRect[X] + ', ' + node.nodeRect[Y] +')';
-			});
+			})
+			.attr('data_id', function(node){
+				return node.node.id;
+			})
+			;
+
 			// 画框
 			g.append('rect')
 			.attr('x', function(node){

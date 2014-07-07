@@ -16,6 +16,7 @@
     <![endif]-->
     <script src="data.js" charset="utf-8"></script>
     <script src="ochart.js" charset="utf-8"></script>
+    <script src="jquery.js" charset="utf-8"></script>
 
     <style type="text/css">
         *{
@@ -56,6 +57,7 @@
             font-weight: normal;
             stroke: RGB(200,237,203);
             fill: RGB(200,237,203);
+            cursor: pointer;
         }
         .node text {
             /*stroke: steelblue;
@@ -93,13 +95,17 @@
     <script type="text/javascript">
 
     // 调用这个函数
-    drawOChart(dept, '#container', 'vertical');
+    drawOChart(dept, '#container', 'horizontal');
     //drawOChart(dept, '#container', 'horizontal');
 
 
     function drawOChart(data, containerSelector, orient){
         var ochart = d3.ochart(data).orient(orient);
         d3.select(containerSelector).call(ochart);
+        // 添加点击事件处理
+        $('g.node').on('click', function(){
+            alert('id: ' + $(this).attr('data_id'));
+        });
     }
     </script>
 </body>
