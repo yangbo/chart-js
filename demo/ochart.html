@@ -91,16 +91,8 @@
     </div>
 
     <script type="text/javascript">
-
-    // 调用这个函数
-    drawOChart(dept, '#container', 'vertical');
-    //drawOChart(dept, '#container', 'horizontal');
-
-
-    function drawOChart(data, containerSelector, orient){
-        var ochart = d3.ochart(data).orient(orient);
-        d3.select(containerSelector).call(ochart);
-    }
+        var ochart = d3.ochart(dept).orient('vertical');
+        d3.select('#container').call(ochart);
     </script>
 </body>
 </html>
