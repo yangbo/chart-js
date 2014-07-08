@@ -31,51 +31,29 @@
             overflow: hidden;
         }
         .svg {
-            /*border: 1px solid blue;*/
             cursor: move;
         }
-
-        .node circle {
-          fill: #fff;
-          stroke: steelblue;
-          stroke-width: 1.5px;
+        /* 背景 */
+        rect {
+            fill: RGB(200,237,203);
         }
-
         .node rect {
-            /*fill: none;
-            stroke: steelblue;
-            stroke-width: 2px;*/
-            /*fill:RGB(30,52,86);*/
             fill:RGB(33,62,121);
             stroke:RGB(0,0,0);
             stroke-width:1;
             filter:url(#Gaussian_Blur);
         }
-
         .node {
-            font: 16px 雅黑;
+            font: 14px 雅黑;
             font-weight: normal;
             stroke: RGB(200,237,203);
             fill: RGB(200,237,203);
             cursor: pointer;
         }
-        .node text {
-            /*stroke: steelblue;
-            color: black;*/
-        }
-        .node text.vertical {
-            writing-mode: tb;
-        }
-
-        .link {
-          fill: none;
-          stroke: #cccccc;
-          stroke-width: 1.5px;
-        }
-        rect {
-            fill: RGB(200,237,203);
-        }
         .links line {
+            fill: none;
+            stroke: #cccccc;
+            stroke-width: 1.5px;
             stroke: RGB(73,124,185);
         }
     </style>
@@ -95,12 +73,13 @@
     <script type="text/javascript">
 
     // 调用这个函数
-    drawOChart(dept, '#container', 'vertical');
-    //drawOChart(dept, '#container', 'horizontal');
-
+    drawOChart(dept, '#container', 'horizontal');
 
     function drawOChart(data, containerSelector, orient){
-        var ochart = d3.ochart(data).orient(orient);
+        var ochart = d3.ochart(data)
+            .orient(orient)
+            .fontSize([14,15])  // 设置字体大小[宽,高]
+            ;
         d3.select(containerSelector).call(ochart);
         // 添加点击事件处理
         $('g.node').on('click', function(){
