@@ -73,12 +73,13 @@
     <script type="text/javascript">
 
     // 调用这个函数
-    drawOChart(dept, '#container', 'horizontal');
+    drawOChart(dept, '#container', 'horizontal');   // vertical, horizontal
 
     function drawOChart(data, containerSelector, orient){
         var ochart = d3.ochart(data)
             .orient(orient)
-            .fontSize([14,15])  // 设置字体大小[宽,高]
+            .fontSize([14,16])      // 设置字体大小[宽,高]
+            .nodePadding([10,12])   // 节点内边距 [上下，左右]
             ;
         d3.select(containerSelector).call(ochart);
         // 添加点击事件处理

@@ -597,10 +597,12 @@
 			var width = container.style('width');
 			var height = container.style('height');
 
+			var treeTranslate = centeringTree(tree, parseInt(width), parseInt(height));
 			// pan
 	        var zoom = d3.behavior.zoom()
 	            .scaleExtent([1,1])
-	            .on('zoom', zoomed);
+	            .on('zoom', zoomed)
+	            .translate([treeTranslate.x,treeTranslate.y]);
 
 	        var svg = d3.select('svg')
 	        .attr('width', width)
@@ -613,7 +615,7 @@
 	            .attr("height", height);
 
 	        svg = svg.append("g").attr('class', 'canvas')
-	            .attr("transform", "translate(0,0)");
+	            .attr("transform", "translate(" + treeTranslate.x + "," + treeTranslate.y + ")");
 
 	        function zoomed(){
 	            var x = d3.event.translate[0];
@@ -622,6 +624,18 @@
 	        }
 			drawNodes(svg, tree);
 			drawLinks(svg, tree);
+		}
+
+		function centeringTree(tree, containerWidth, containerHeight){
+			var x,y,padding = layerHeight/5;
+			if (orient == 'vertical'){
+				x = padding;
+				y = -tree.nodeRect[Y] + containerHeight/2 - tree.nodeRect[HEIGHT]/2;
+			}else{
+				x = -tree.nodeRect[X] + containerWidth/2 - tree.nodeRect[WIDTH]/2;
+				y = padding;
+			}
+			return {'x':x,'y':y};
 		}
 
 		function drawLinks(svg, tree){
