@@ -59,6 +59,8 @@
     </style>
 </head>
 <body>
+
+    <input type="button" value="hide/show" id="hideBtn"/>
     
     <div id="container">
         <svg class="svg">
@@ -87,6 +89,10 @@
             alert('id: ' + $(this).attr('data_id'));
         });
     }
+
+    $('#hideBtn').on('click',function(){
+        $('#container').toggle();
+    });
     </script>
 </body>
 </html>
