@@ -59,6 +59,8 @@
     </style>
 </head>
 <body>
+
+    <input type="button" value="hide/show" id="hideBtn"/>
     
     <div id="container">
         <svg class="svg">
@@ -80,6 +82,7 @@
             .orient(orient)
             .fontSize([14,16])      // 设置字体大小[宽,高]
             .nodePadding([10,12])   // 节点内边距 [上下，左右]
+            .enablePan(false)       // 禁止移动图
             ;
         d3.select(containerSelector).call(ochart);
         // 添加点击事件处理
@@ -87,6 +90,10 @@
             alert('id: ' + $(this).attr('data_id'));
         });
     }
+
+    $('#hideBtn').on('click',function(){
+        $('#container').toggle();
+    });
     </script>
 </body>
 </html>

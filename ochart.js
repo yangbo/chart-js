@@ -24,7 +24,8 @@
 			, nodeLabelReader = defaultNodeLabelReader
 			, interval = 15				// space between sibling nodes.
 			, layerHeight = 100 		// height of layer, from top to top.
-			, fontSize = [16, 18];		// width, height. 高度比宽度大2像素
+			, fontSize = [16, 18]		// width, height. 高度比宽度大2像素
+            , enablePan = true;         // 是否允许移动图
 		;
 
 		// main function
@@ -40,6 +41,11 @@
 		}
 
 		// config methods
+        ochart.enablePan = function(x){
+            if (!arguments.length) return enablePan;
+            enablePan = x;
+            return ochart;
+        };
 		ochart.orient = function(x) {
 			if (!arguments.length) return orient;
 			orient = x;
@@ -620,7 +626,9 @@
 	        function zoomed(){
 	            var x = d3.event.translate[0];
 	            var y = d3.event.translate[1];
-	            d3.select('.canvas').attr('transform', 'translate('+x+','+y+')');
+                if (enablePan){
+                    d3.select('.canvas').attr('transform', 'translate('+x+','+y+')');
+                }
 	        }
 			drawNodes(svg, tree);
 			drawLinks(svg, tree);
