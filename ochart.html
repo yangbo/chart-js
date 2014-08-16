@@ -23,12 +23,16 @@
             padding: 0;
             margin: 0;
         }
+        body{
+            height: 583px;
+        }
         #container{
-            width: 900px;
-            height: 700px;
+            width: 80%;
+            height: 100%;
             border: 1px solid gray;
             margin: 20px auto;
             overflow: hidden;
+            display: none;
         }
         .svg {
             cursor: move;
@@ -61,7 +65,7 @@
 <body>
 
     <input type="button" value="hide/show" id="hideBtn"/>
-    
+
     <div id="container">
         <svg class="svg">
             <defs>
@@ -71,18 +75,17 @@
             </defs>
         </svg>
     </div>
-
     <script type="text/javascript">
 
     // 调用这个函数
-    drawOChart(dept, '#container', 'horizontal');   // vertical, horizontal
+    //drawOChart(dept, '#container', 'horizontal');   // vertical, horizontal
 
     function drawOChart(data, containerSelector, orient){
         var ochart = d3.ochart(data)
             .orient(orient)
             .fontSize([14,16])      // 设置字体大小[宽,高]
             .nodePadding([10,12])   // 节点内边距 [上下，左右]
-            .enablePan(false)       // 禁止移动图
+            .enablePan(true)       // 禁止移动图
             ;
         d3.select(containerSelector).call(ochart);
         // 添加点击事件处理
@@ -93,6 +96,7 @@
 
     $('#hideBtn').on('click',function(){
         $('#container').toggle();
+        drawOChart(dept, '#container', 'horizontal');   // vertical, horizontal
     });
     </script>
 </body>
